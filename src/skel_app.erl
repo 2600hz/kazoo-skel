@@ -12,6 +12,7 @@
 -behaviour(application).
 
 -include("skel.hrl").
+-define(INTEGRATION_MODULES, [{'cb_skels', 'crossbar_maintenance', 'start_module'}]).
 
 -export([start/2, stop/1]).
 
@@ -23,6 +24,7 @@
 start(_Type, _Args) ->
     _ = declare_exchanges(),
     _ = kapps_maintenance:bind_and_register_views(?APP, 'skel_maintenance', 'register_views'),
+    kz_module:application_integrations(?INTEGRATION_MODULES),
     skel_sup:start_link().
 
 %%------------------------------------------------------------------------------
