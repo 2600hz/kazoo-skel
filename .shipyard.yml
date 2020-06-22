@@ -1,0 +1,21 @@
+---
+name: kazoo-application-skel
+base_branch: 'origin/5.0'
+metapackage:
+  - name: meta-kazoo-applications
+    type: related
+    branch: '5.0'
+    package: kazoo-application-skel
+base_core: kazoo
+template: kazoo-application.spec.tmpl
+package:
+  centos7:
+    name: kazoo-application-skel
+    summary: Kazoo Skeleton Application
+    description: |
+      Skel: A skeleton application useful for quickly creating KAZOO applications
+    app_name: skel
+    license: MPL 2.0
+    group: Productivity/Telephony
+    url: https://2600hz.com/
+    vendor: 2600Hz
