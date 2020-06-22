@@ -8,9 +8,9 @@
 *.sasl
 *.plt
 *.app
-.deps.mk
+.deps.mk*
+.apps.mk*
 .deps.rules
-.apps.mk.*
 .test.deps
 *.beam
 *.so
