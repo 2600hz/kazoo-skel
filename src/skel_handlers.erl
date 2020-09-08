@@ -34,7 +34,7 @@ handle_route_req(JObj, Props) ->
     %% Create a response that will just park the call
     Resp = props:filter_undefined([{<<"Msg-ID">>, kz_json:get_value(<<"Msg-ID">>, JObj)}
                                   ,{<<"Method">>, <<"park">>}
-                                   | kz_api:default_headers(Q, ?APP_NAME, ?APP_VERSION)
+                                  | kz_api:default_headers(Q, ?APP_NAME, ?APP_VERSION)
                                   ]),
 
     %% Find who to send the response back to
