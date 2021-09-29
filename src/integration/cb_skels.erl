@@ -1,6 +1,6 @@
 %%%-----------------------------------------------------------------------------
-%%% @copyright (C) 2011-2020, 2600Hz
-%%% @doc Crossnar API for skel.
+%%% @copyright (C) 2011-2021, 2600Hz
+%%% @doc Skeleton module for Crossbar API endpoints
 %%% @author Karl Anderson
 %%% @author James Aimonetti
 %%%
@@ -35,7 +35,25 @@
 
 -include_lib("crossbar/src/crossbar.hrl").
 
--define(CB_LIST, <<"skels/crossbar_listing">>).
+%% There is a master design document in
+%% core/kazoo_couch/priv/couchdb/views/account-crossbar_listings.json
+%% If you need specific fields exposed in the summary view, find the
+%% "by_type_id" view and add a case clause to add the doc's fields to
+%% the `defaultValue` object (which is emitted at the end)
+-define(CB_LIST, <<"crossbar_listings/by_type_id">>).
+
+%% We define the API endpoint name by the collection name. This
+%% module's {COLLECTION} would be "skels" while the {RESOURCE}
+%% provided would be "skel".
+%%
+%% A JSON schema should be added that matches the collection name (so
+%% "{COLLECTION}.json" in this case). When `make ci-docs` is run from
+%% the KAZOO root, an accessor module in core/kazoo_documents will be
+%% created: `kzd_{COLLECTION}.erl`
+%%
+%% Two functions to add to the kzd module are `schema/0` and `type/0`
+%% which return the name of the schema (generally {COLLECTION}) and
+%% pvt_type (generally {RESOURCE}).
 
 %%%=============================================================================
 %%% API
@@ -47,25 +65,28 @@
 %%------------------------------------------------------------------------------
 -spec init() -> 'ok'.
 init() ->
-    _ = crossbar_bindings:bind(<<"*.authenticate">>, ?MODULE, 'authenticate'),
-    _ = crossbar_bindings:bind(<<"*.authorize">>, ?MODULE, 'authorize'),
-    _ = crossbar_bindings:bind(<<"*.allowed_methods.skels">>, ?MODULE, 'allowed_methods'),
-    _ = crossbar_bindings:bind(<<"*.resource_exists.skels">>, ?MODULE, 'resource_exists'),
-    _ = crossbar_bindings:bind(<<"*.content_types_provided.skels">>, ?MODULE, 'content_types_provided'),
-    _ = crossbar_bindings:bind(<<"*.content_types_accepted.skels">>, ?MODULE, 'content_types_accepted'),
-    _ = crossbar_bindings:bind(<<"*.languages_provided.skels">>, ?MODULE, 'languages_provided'),
-    _ = crossbar_bindings:bind(<<"*.charsets_provided.skels">>, ?MODULE, 'charsets_provided'),
-    _ = crossbar_bindings:bind(<<"*.encodings_provided.skels">>, ?MODULE, 'encodings_provided'),
-    _ = crossbar_bindings:bind(<<"*.validate.skels">>, ?MODULE, 'validate'),
-    _ = crossbar_bindings:bind(<<"*.billing">>, ?MODULE, 'billing'),
-    _ = crossbar_bindings:bind(<<"*.execute.get.skels">>, ?MODULE, 'get'),
-    _ = crossbar_bindings:bind(<<"*.execute.put.skels">>, ?MODULE, 'put'),
-    _ = crossbar_bindings:bind(<<"*.execute.post.skels">>, ?MODULE, 'post'),
-    _ = crossbar_bindings:bind(<<"*.execute.patch.skels">>, ?MODULE, 'patch'),
-    _ = crossbar_bindings:bind(<<"*.execute.delete.skels">>, ?MODULE, 'delete'),
-    _ = crossbar_bindings:bind(<<"*.etag.skels">>, ?MODULE, 'etag'),
-    _ = crossbar_bindings:bind(<<"*.expires.skels">>, ?MODULE, 'expires'),
-    _ = crossbar_bindings:bind(<<"*.finish_request">>, ?MODULE, 'finish_request').
+    Bindings = [{<<"*.authenticate">>, 'authenticate'},
+                {<<"*.authorize">>, 'authorize'},
+                {<<"*.allowed_methods.skels">>, 'allowed_methods'},
+                {<<"*.resource_exists.skels">>, 'resource_exists'},
+                {<<"*.content_types_provided.skels">>, 'content_types_provided'},
+                {<<"*.content_types_accepted.skels">>, 'content_types_accepted'},
+                {<<"*.languages_provided.skels">>, 'languages_provided'},
+                {<<"*.charsets_provided.skels">>, 'charsets_provided'},
+                {<<"*.encodings_provided.skels">>, 'encodings_provided'},
+                {<<"*.validate.skels">>, 'validate'},
+                {<<"*.billing">>, 'billing'},
+                {<<"*.execute.get.skels">>, 'get'},
+                {<<"*.execute.put.skels">>, 'put'},
+                {<<"*.execute.post.skels">>, 'post'},
+                {<<"*.execute.patch.skels">>, 'patch'},
+                {<<"*.execute.delete.skels">>, 'delete'},
+                {<<"*.etag.skels">>, 'etag'},
+                {<<"*.expires.skels">>, 'expires'},
+                {<<"*.finish_request">>, 'finish_request'}
+               ],
+    cb_modules_util:bind(?MODULE, Bindings),
+    'ok'.
 
 %%------------------------------------------------------------------------------
 %% @doc Authenticates the incoming request, returning true if the requestor is
@@ -273,7 +294,7 @@ finish_request(Context) ->
 -spec create(cb_context:context()) -> cb_context:context().
 create(Context) ->
     OnSuccess = fun(C) -> on_successful_validation('undefined', C) end,
-    cb_context:validate_request_data(<<"skels">>, Context, OnSuccess).
+    cb_context:validate_request_data(kzd_skels:schema(), Context, OnSuccess).
 
 %%------------------------------------------------------------------------------
 %% @doc Load an instance from the database
@@ -281,7 +302,7 @@ create(Context) ->
 %%------------------------------------------------------------------------------
 -spec read(kz_term:ne_binary(), cb_context:context()) -> cb_context:context().
 read(Id, Context) ->
-    crossbar_doc:load(Id, Context, ?TYPE_CHECK_OPTION(<<"skel">>)).
+    crossbar_doc:load(Id, Context, ?TYPE_CHECK_OPTION(kzd_skels:type())).
 
 %%------------------------------------------------------------------------------
 %% @doc Update an existing menu document with the data provided, if it is
@@ -291,7 +312,7 @@ read(Id, Context) ->
 -spec update(kz_term:ne_binary(), cb_context:context()) -> cb_context:context().
 update(Id, Context) ->
     OnSuccess = fun(C) -> on_successful_validation(Id, C) end,
-    cb_context:validate_request_data(<<"skels">>, Context, OnSuccess).
+    cb_context:validate_request_data(kzd_skels:schema(), Context, OnSuccess).
 
 %%------------------------------------------------------------------------------
 %% @doc Update-merge an existing menu document with the data provided, if it is
@@ -317,9 +338,9 @@ summary(Context) ->
 %%------------------------------------------------------------------------------
 -spec on_successful_validation(kz_term:api_binary(), cb_context:context()) -> cb_context:context().
 on_successful_validation('undefined', Context) ->
-    cb_context:set_doc(Context, kz_doc:set_type(cb_context:doc(Context), <<"skel">>));
+    cb_context:set_doc(Context, kz_doc:set_type(cb_context:doc(Context), kzd_skels:type()));
 on_successful_validation(Id, Context) ->
-    crossbar_doc:load_merge(Id, Context, ?TYPE_CHECK_OPTION(<<"skel">>)).
+    crossbar_doc:load_merge(Id, Context, ?TYPE_CHECK_OPTION(kzd_skels:type())).
 
 %%------------------------------------------------------------------------------
 %% @doc Normalizes the results of a view.
