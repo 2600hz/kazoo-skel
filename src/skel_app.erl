@@ -34,7 +34,9 @@ start(_Type, _Args) ->
 %%------------------------------------------------------------------------------
 -spec stop(any()) -> any().
 stop(_State) ->
+    _ = kapps_maintenance:unbind(?APP, 'skel_maintenance', 'register_views'),
     'ok'.
+
 
 -spec declare_exchanges() -> 'ok'.
 declare_exchanges() ->
