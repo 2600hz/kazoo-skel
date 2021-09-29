@@ -42,7 +42,7 @@ handle_route_req(JObj, Props) ->
     Publisher = fun(P) -> kapi_route:publish_resp(ServerId, P) end,
 
     %% Use an AMQP worker to send the response
-    kz_amqp_worker:cast(Resp, Publisher),
+    _ = kz_amqp_worker:cast(Resp, Publisher),
 
     %% now we can cache the kapps_call record in case we receive the route_win
     %% we pass along APP_NAME to namespace our call from other apps in the same VM
@@ -71,7 +71,7 @@ process_call(Call) ->
     kapps_call_command:answer(Call),
 
     %% Let's let the caller know we're here
-    kapps_call_command:b_tts(<<"Hello caller, welcome to Kazoo">>, Call),
+    _ = kapps_call_command:b_tts(<<"Hello caller, welcome to Kazoo">>, Call),
 
     %% Hangup the call
     kapps_call_command:hangup(Call).
