@@ -1,5 +1,5 @@
 %%%-----------------------------------------------------------------------------
-%%% @copyright (C) 2011-2021, 2600Hz
+%%% @copyright (C) 2011-2022, 2600Hz
 %%% @doc Skeleton module for Crossbar API endpoints
 %%% @author Karl Anderson
 %%% @author James Aimonetti
@@ -65,25 +65,25 @@
 %%------------------------------------------------------------------------------
 -spec init() -> 'ok'.
 init() ->
-    Bindings = [{<<"*.authenticate">>, 'authenticate'},
-                {<<"*.authorize">>, 'authorize'},
-                {<<"*.allowed_methods.skels">>, 'allowed_methods'},
-                {<<"*.resource_exists.skels">>, 'resource_exists'},
-                {<<"*.content_types_provided.skels">>, 'content_types_provided'},
-                {<<"*.content_types_accepted.skels">>, 'content_types_accepted'},
-                {<<"*.languages_provided.skels">>, 'languages_provided'},
-                {<<"*.charsets_provided.skels">>, 'charsets_provided'},
-                {<<"*.encodings_provided.skels">>, 'encodings_provided'},
-                {<<"*.validate.skels">>, 'validate'},
-                {<<"*.billing">>, 'billing'},
-                {<<"*.execute.get.skels">>, 'get'},
-                {<<"*.execute.put.skels">>, 'put'},
-                {<<"*.execute.post.skels">>, 'post'},
-                {<<"*.execute.patch.skels">>, 'patch'},
-                {<<"*.execute.delete.skels">>, 'delete'},
-                {<<"*.etag.skels">>, 'etag'},
-                {<<"*.expires.skels">>, 'expires'},
-                {<<"*.finish_request">>, 'finish_request'}
+    Bindings = [{<<"*.authenticate">>, 'authenticate'}
+               ,{<<"*.authorize">>, 'authorize'}
+               ,{<<"*.allowed_methods.skels">>, 'allowed_methods'}
+               ,{<<"*.resource_exists.skels">>, 'resource_exists'}
+               ,{<<"*.content_types_provided.skels">>, 'content_types_provided'}
+               ,{<<"*.content_types_accepted.skels">>, 'content_types_accepted'}
+               ,{<<"*.languages_provided.skels">>, 'languages_provided'}
+               ,{<<"*.charsets_provided.skels">>, 'charsets_provided'}
+               ,{<<"*.encodings_provided.skels">>, 'encodings_provided'}
+               ,{<<"*.validate.skels">>, 'validate'}
+               ,{<<"*.billing">>, 'billing'}
+               ,{<<"*.execute.get.skels">>, 'get'}
+               ,{<<"*.execute.put.skels">>, 'put'}
+               ,{<<"*.execute.post.skels">>, 'post'}
+               ,{<<"*.execute.patch.skels">>, 'patch'}
+               ,{<<"*.execute.delete.skels">>, 'delete'}
+               ,{<<"*.etag.skels">>, 'etag'}
+               ,{<<"*.expires.skels">>, 'expires'}
+               ,{<<"*.finish_request">>, 'finish_request'}
                ],
     cb_modules_util:bind(?MODULE, Bindings),
     'ok'.
@@ -94,7 +94,7 @@ init() ->
 %% @end
 %%------------------------------------------------------------------------------
 -spec authenticate(cb_context:context()) -> 'false'.
-authenticate(_) -> 'false'.
+authenticate(_ThingId) -> 'false'.
 
 %%------------------------------------------------------------------------------
 %% @doc Authorizes the incoming request, returning true if the requestor is
@@ -102,20 +102,19 @@ authenticate(_) -> 'false'.
 %% @end
 %%------------------------------------------------------------------------------
 -spec authorize(cb_context:context()) -> 'false'.
-authorize(_) -> 'false'.
+authorize(_ThingId) -> 'false'.
 
 %%------------------------------------------------------------------------------
 %% @doc Given the path tokens related to this module, what HTTP methods are
 %% going to be responded to.
 %% @end
 %%------------------------------------------------------------------------------
-
 -spec allowed_methods() -> http_methods().
 allowed_methods() ->
     [?HTTP_GET, ?HTTP_PUT].
 
 -spec allowed_methods(path_token()) -> http_methods().
-allowed_methods(_Thing) ->
+allowed_methods(_ThingId) ->
     [?HTTP_GET, ?HTTP_POST, ?HTTP_PATCH, ?HTTP_DELETE].
 
 %%------------------------------------------------------------------------------
@@ -129,12 +128,11 @@ allowed_methods(_Thing) ->
 %% '''
 %% @end
 %%------------------------------------------------------------------------------
-
 -spec resource_exists() -> 'true'.
 resource_exists() -> 'true'.
 
 -spec resource_exists(path_token()) -> 'true'.
-resource_exists(_) -> 'true'.
+resource_exists(_ThingId) -> 'true'.
 
 %%------------------------------------------------------------------------------
 %% @doc What content-types will the module be using to respond (matched against
@@ -195,14 +193,13 @@ encodings_provided(Context) ->
 %% Generally, use crossbar_doc to manipulate the cb_context{} record
 %% @end
 %%------------------------------------------------------------------------------
-
 -spec validate(cb_context:context()) -> cb_context:context().
 validate(Context) ->
     validate_skels(Context, cb_context:req_verb(Context)).
 
 -spec validate(cb_context:context(), path_token()) -> cb_context:context().
-validate(Context, Id) ->
-    validate_skel(Context, Id, cb_context:req_verb(Context)).
+validate(Context, ThingId) ->
+    validate_skel(Context, ThingId, cb_context:req_verb(Context)).
 
 -spec validate_skels(cb_context:context(), http_method()) -> cb_context:context().
 validate_skels(Context, ?HTTP_GET) ->
@@ -211,14 +208,14 @@ validate_skels(Context, ?HTTP_PUT) ->
     create(Context).
 
 -spec validate_skel(cb_context:context(), path_token(), http_method()) -> cb_context:context().
-validate_skel(Context, Id, ?HTTP_GET) ->
-    read(Id, Context);
-validate_skel(Context, Id, ?HTTP_POST) ->
-    update(Id, Context);
-validate_skel(Context, Id, ?HTTP_PATCH) ->
-    validate_patch(Id, Context);
-validate_skel(Context, Id, ?HTTP_DELETE) ->
-    read(Id, Context).
+validate_skel(Context, ThingId, ?HTTP_GET) ->
+    read(Context, ThingId);
+validate_skel(Context, ThingId, ?HTTP_POST) ->
+    update(Context, ThingId);
+validate_skel(Context, ThingId, ?HTTP_PATCH) ->
+    validate_patch(Context, ThingId);
+validate_skel(Context, ThingId, ?HTTP_DELETE) ->
+    read(Context, ThingId).
 
 %%------------------------------------------------------------------------------
 %% @doc If you handle billing-related calls, this callback will allow you to
@@ -243,7 +240,7 @@ put(Context) ->
 %% @end
 %%------------------------------------------------------------------------------
 -spec post(cb_context:context(), path_token()) -> cb_context:context().
-post(Context, _) ->
+post(Context, _ThingId) ->
     crossbar_doc:save(Context).
 
 %%------------------------------------------------------------------------------
@@ -252,7 +249,7 @@ post(Context, _) ->
 %% @end
 %%------------------------------------------------------------------------------
 -spec patch(cb_context:context(), path_token()) -> cb_context:context().
-patch(Context, _) ->
+patch(Context, _ThingId) ->
     crossbar_doc:save(Context).
 
 %%------------------------------------------------------------------------------
@@ -260,7 +257,7 @@ patch(Context, _) ->
 %% @end
 %%------------------------------------------------------------------------------
 -spec delete(cb_context:context(), path_token()) -> cb_context:context().
-delete(Context, _) ->
+delete(Context, _ThingId) ->
     crossbar_doc:delete(Context).
 
 %%------------------------------------------------------------------------------
@@ -293,25 +290,25 @@ finish_request(Context) ->
 %%------------------------------------------------------------------------------
 -spec create(cb_context:context()) -> cb_context:context().
 create(Context) ->
-    OnSuccess = fun(C) -> on_successful_validation('undefined', C) end,
+    OnSuccess = fun(Ctx) -> on_successful_validation(Ctx, 'undefined') end,
     cb_context:validate_request_data(kzd_skels:schema(), Context, OnSuccess).
 
 %%------------------------------------------------------------------------------
 %% @doc Load an instance from the database
 %% @end
 %%------------------------------------------------------------------------------
--spec read(kz_term:ne_binary(), cb_context:context()) -> cb_context:context().
-read(Id, Context) ->
-    crossbar_doc:load(Id, Context, ?TYPE_CHECK_OPTION(kzd_skels:type())).
+-spec read(cb_context:context(), kz_term:ne_binary()) -> cb_context:context().
+read(Context, ThingId) ->
+    crossbar_doc:load(ThingId, Context, ?TYPE_CHECK_OPTION(kzd_skels:type())).
 
 %%------------------------------------------------------------------------------
 %% @doc Update an existing menu document with the data provided, if it is
 %% valid
 %% @end
 %%------------------------------------------------------------------------------
--spec update(kz_term:ne_binary(), cb_context:context()) -> cb_context:context().
-update(Id, Context) ->
-    OnSuccess = fun(C) -> on_successful_validation(Id, C) end,
+-spec update(cb_context:context(), kz_term:ne_binary()) -> cb_context:context().
+update(Context, ThingId) ->
+    OnSuccess = fun(Ctx) -> on_successful_validation(Ctx, ThingId) end,
     cb_context:validate_request_data(kzd_skels:schema(), Context, OnSuccess).
 
 %%------------------------------------------------------------------------------
@@ -319,9 +316,9 @@ update(Id, Context) ->
 %% valid
 %% @end
 %%------------------------------------------------------------------------------
--spec validate_patch(kz_term:ne_binary(), cb_context:context()) -> cb_context:context().
-validate_patch(Id, Context) ->
-    crossbar_doc:patch_and_validate(Id, Context, fun update/2).
+-spec validate_patch(cb_context:context(), kz_term:ne_binary()) -> cb_context:context().
+validate_patch(Context, ThingId) ->
+    crossbar_doc:patch_and_validate(ThingId, Context, fun update/2).
 
 %%------------------------------------------------------------------------------
 %% @doc Attempt to load a summarized listing of all instances of this
@@ -336,11 +333,11 @@ summary(Context) ->
 %% @doc
 %% @end
 %%------------------------------------------------------------------------------
--spec on_successful_validation(kz_term:api_binary(), cb_context:context()) -> cb_context:context().
-on_successful_validation('undefined', Context) ->
+-spec on_successful_validation(cb_context:context(), kz_term:api_ne_binary()) -> cb_context:context().
+on_successful_validation(Context, 'undefined') ->
     cb_context:set_doc(Context, kz_doc:set_type(cb_context:doc(Context), kzd_skels:type()));
-on_successful_validation(Id, Context) ->
-    crossbar_doc:load_merge(Id, Context, ?TYPE_CHECK_OPTION(kzd_skels:type())).
+on_successful_validation(Context, ThingId) ->
+    crossbar_doc:load_merge(ThingId, Context, ?TYPE_CHECK_OPTION(kzd_skels:type())).
 
 %%------------------------------------------------------------------------------
 %% @doc Normalizes the results of a view.

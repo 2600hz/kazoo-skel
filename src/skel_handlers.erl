@@ -1,5 +1,5 @@
 %%%-----------------------------------------------------------------------------
-%%% @copyright (C) 2013-2020, 2600Hz
+%%% @copyright (C) 2013-2022, 2600Hz
 %%% @doc Handlers for various AMQP payloads
 %%% @author James Aimonetti
 %%%
@@ -17,31 +17,31 @@
 
 -include("skel.hrl").
 
--spec handle_route_req(kz_json:object(), kz_term:proplist()) -> any().
-handle_route_req(JObj, Props) ->
+-spec handle_route_req(kapi_route:req(), kz_term:proplist()) -> any().
+handle_route_req(RouteReq, Props) ->
     %% First validate the JSON
-    'true' = kapi_route:req_v(JObj),
+    'true' = kapi_route:req_v(RouteReq),
 
     %% Populate a kapps_call record from the route_req JSON
-    Call = kapps_call:from_route_req(JObj),
+    Call = kapps_call:from_route_req(RouteReq),
 
     %% Do some logic to see if your app should respond
     %% If so, send a route_resp
 
     %% This is the AMQP queue to send the route_win, if appropriate
-    Q = props:get_value('queue', Props),
+    QueueName = props:get_value('queue', Props),
 
     %% Create a response that will just park the call
-    Resp = props:filter_undefined([{<<"Msg-ID">>, kz_json:get_value(<<"Msg-ID">>, JObj)}
+    Resp = props:filter_undefined([{<<"Msg-ID">>, kz_api:msg_id(RouteReq)}
                                   ,{<<"Method">>, <<"park">>}
-                                  | kz_api:default_headers(Q, ?APP_NAME, ?APP_VERSION)
+                                  | kz_api:default_headers(QueueName, ?APP_NAME, ?APP_VERSION)
                                   ]),
 
     %% Find who to send the response back to
-    ServerId = kz_json:get_value(<<"Server-ID">>, JObj),
+    ServerId = kz_api:server_id(RouteReq),
     Publisher = fun(P) -> kapi_route:publish_resp(ServerId, P) end,
 
-    %% Use an AMQP worker to send the response
+    %% Use an AMQP worker to publish the response
     _ = kz_amqp_worker:cast(Resp, Publisher),
 
     %% now we can cache the kapps_call record in case we receive the route_win
@@ -50,17 +50,17 @@ handle_route_req(JObj, Props) ->
     kapps_call:cache(Call, ?APP_NAME).
 
 %% receiving the route_win means we are in control of the call
--spec handle_route_win(kz_json:object(), kz_term:proplist()) -> 'ok'.
-handle_route_win(JObj, _Props) ->
+-spec handle_route_win(kapi_route:win(), kz_term:proplist()) -> 'ok'.
+handle_route_win(RouteWin, _Props) ->
     %% Yay, we have control of the call
     %% First, validate the JSON
-    'true' = kapi_route:win_v(JObj),
+    'true' = kapi_route:win_v(RouteWin),
 
     %% Now we can fetch the kapps_call record from the cache
-    case kapps_call:retrieve(kz_json:get_value(<<"Call-ID">>, JObj), ?APP_NAME) of
+    case kapps_call:retrieve(kz_api:call_id(RouteWin), ?APP_NAME) of
         {'ok', Call} ->
             %% we augment the record with route_win JSON values
-            process_call(kapps_call:from_route_win(JObj, Call));
+            process_call(kapps_call:from_route_win(RouteWin, Call));
         {'error', _R} ->
             lager:debug("unable to find call record during route_win")
     end.

@@ -1,6 +1,7 @@
 %%%-----------------------------------------------------------------------------
-%%% @copyright (C) 2010-2020, 2600Hz
-%%% @doc
+%%% @copyright (C) 2010-2022, 2600Hz
+%%% @doc AMQP consumer for events the app is interested in
+%%%
 %%% This Source Code Form is subject to the terms of the Mozilla Public
 %%% License, v. 2.0. If a copy of the MPL was not distributed with this
 %%% file, You can obtain one at https://mozilla.org/MPL/2.0/.
@@ -27,20 +28,44 @@
 -record(state, {}).
 -type state() :: #state{}.
 
-%% By convention, we put the options here in macros, but not required.
--define(BINDINGS, [{'route', []}
-                  ,{'self', []}
-                  ]).
--define(RESPONDERS, [
-                     %% Received because of our route binding
-                     {{'skel_handlers', 'handle_route_req'}, [{<<"dialplan">>, <<"route_req">>}]}
+%% By convention, we put the gen_listener options here in macros, but
+%% not required.
 
-                     %% Received because of our self binding (route_wins are sent to the route_resp's Server-ID
-                     %% which is usually populated with the listener's queue name
-                    ,{{'skel_handlers', 'handle_route_win'}, [{<<"dialplan">>, <<"route_win">>}]}
+%% Bindings map to the kapi_* modules and setup the AMQP bindings (or
+%% pooled bindings if applicable) the app is interested in receiving
+-define(BINDINGS, [{'route', []}
+                  ,{'self', []} % self binds the AMQP queue name for direct replies to this listener
+                  ]).
+
+%% Responders are callbacks and basic event matching - what callback
+%% to run when matching an event's category/name
+
+-define(RESPONDERS, [{{'skel_handlers', 'handle_route_req'} % callback to use
+                     ,[{<<"dialplan">>, <<"route_req">>}] % event Category and Name matching
+                     }
+
+                     %% Received because of our self binding
+                     %% (route_wins are sent to the route_resp's
+                     %% Server-ID which is usually populated with the
+                     %% listener's queue name
+                    ,{{'skel_handlers', 'handle_route_win'}
+                     ,[{<<"dialplan">>, <<"route_win">>}]
+                     }
                     ]).
+
+%% Empty queue name will create a "random" queue name; this process
+%% will receive a copy of all messages bound for in AMQP-land. All
+%% instances of this KAZOO app will receive copies of the messages
+
+%% If messages should only be handled by one instance of a KAZOO app,
+%% project standards say to use a `skel_shared_listener` gen_listener
+%% module and process to handle those.
 -define(QUEUE_NAME, <<>>).
+
+%% Often just need to set {exclusive, false} for queues with static naming
 -define(QUEUE_OPTIONS, []).
+
+%% Often just need to set {exclusive, false} for queues with static naming
 -define(CONSUME_OPTIONS, []).
 
 %%%=============================================================================
@@ -53,14 +78,16 @@
 %%------------------------------------------------------------------------------
 -spec start_link() -> kz_types:startlink_ret().
 start_link() ->
-    gen_listener:start_link(?SERVER, [
-                                      {'bindings', ?BINDINGS}
-                                     ,{'responders', ?RESPONDERS}
-                                     ,{'queue_name', ?QUEUE_NAME}       % optional to include
-                                     ,{'queue_options', ?QUEUE_OPTIONS} % optional to include
-                                     ,{'consume_options', ?CONSUME_OPTIONS} % optional to include
-                                      %%,{basic_qos, 1}                % only needed if prefetch controls
-                                     ], []).
+    gen_listener:start_link(?SERVER
+                           ,[{'bindings', ?BINDINGS}
+                            ,{'responders', ?RESPONDERS}
+                            ,{'queue_name', ?QUEUE_NAME}       % optional to include
+                            ,{'queue_options', ?QUEUE_OPTIONS} % optional to include
+                            ,{'consume_options', ?CONSUME_OPTIONS} % optional to include
+                             %%,{basic_qos, 1}                % only needed if prefetch controls
+                            ]
+                           ,[]
+                           ).
 
 %%%=============================================================================
 %%% gen_server callbacks
