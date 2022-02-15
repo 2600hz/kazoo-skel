@@ -1,1 +1,1 @@
-DEPS = webhooks
+DEPS = blackhole crossbar webhooks
