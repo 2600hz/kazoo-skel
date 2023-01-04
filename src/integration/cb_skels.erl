@@ -1,5 +1,5 @@
 %%%-----------------------------------------------------------------------------
-%%% @copyright (C) 2011-2022, 2600Hz
+%%% @copyright (C) 2011-2023, 2600Hz
 %%% @doc Skeleton module for Crossbar API endpoints
 %%% @author Karl Anderson
 %%% @author James Aimonetti
