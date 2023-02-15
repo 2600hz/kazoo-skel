@@ -119,7 +119,7 @@ validate_skels(Context, ?HTTP_PUT) ->
 validate_skel(Context, ThingId, ?HTTP_GET) ->
     read(Context, ThingId);
 validate_skel(Context, ThingId, ?HTTP_POST) ->
-    update(Context, ThingId);
+    update(ThingId, Context);
 validate_skel(Context, ThingId, ?HTTP_PATCH) ->
     validate_patch(Context, ThingId);
 validate_skel(Context, ThingId, ?HTTP_DELETE) ->
@@ -181,8 +181,8 @@ read(Context, ThingId) ->
 %% valid
 %% @end
 %%------------------------------------------------------------------------------
--spec update(cb_context:context(), kz_term:ne_binary()) -> cb_context:context().
-update(Context, ThingId) ->
+-spec update(kz_term:ne_binary(), cb_context:context()) -> cb_context:context().
+update(ThingId, Context) ->
     OnSuccess = fun(Ctx) -> on_successful_validation(Ctx, ThingId) end,
     cb_context:validate_request_data(kzd_skels:schema(), Context, OnSuccess).
 
