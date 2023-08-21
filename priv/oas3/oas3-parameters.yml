@@ -1,0 +1,36 @@
+'ACCOUNT_ID':
+  'description': request ACCOUNT_ID parameter
+  'in': path
+  'name': ACCOUNT_ID
+  'required': true
+  'schema':
+    'maxLength': 32
+    'minLength': 32
+    'pattern': '^[0-9a-f]+$'
+    'type': string
+'THING_ID':
+  'description': request THING_ID parameter
+  'in': path
+  'name': THING_ID
+  'required': true
+  'schema':
+    'maxLength': 32
+    'minLength': 32
+    'pattern': '^[0-9a-f]+$'
+    'type': string
+'auth_token_header':
+  'description': request authentication token
+  'in': header
+  'name': X-Auth-Token
+  'required': true
+  'schema':
+    'minLength': 32
+    'type': string
+'auth_token_header_or_none':
+  'description': request authentication token
+  'in': header
+  'name': X-Auth-Token
+  'required': false
+  'schema':
+    'minLength': 32
+    'type': string

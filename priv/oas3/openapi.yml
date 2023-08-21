@@ -1,0 +1,9 @@
+'paths':
+  '/accounts/{ACCOUNT_ID}/crud':
+    '$ref': 'paths/crud.yml#/paths/~1accounts~1{ACCOUNT_ID}~1crud'
+  '/accounts/{ACCOUNT_ID}/crud/{THING_ID}':
+    '$ref': 'paths/crud.yml#/paths/~1accounts~1{ACCOUNT_ID}~1crud~1{THING_ID}'
+  '/accounts/{ACCOUNT_ID}/skels':
+    '$ref': 'paths/skels.yml#/paths/~1accounts~1{ACCOUNT_ID}~1skels'
+  '/accounts/{ACCOUNT_ID}/skels/{THING_ID}':
+    '$ref': 'paths/skels.yml#/paths/~1accounts~1{ACCOUNT_ID}~1skels~1{THING_ID}'
