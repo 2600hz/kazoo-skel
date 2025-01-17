@@ -1,3 +1,5 @@
   - 'Skel: A skeleton application useful for quickly creating KAZOO applications':
     - 'applications/skel/doc/README.md'
+    - 'applications/skel/doc/crud.md'
     - 'applications/skel/doc/maintenance.md'
+    - 'applications/skel/doc/skels.md'
